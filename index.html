@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Anime Checklist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: #111827;
+            --surface: #1f2937;
+            --primary: #3b82f6;
+            --on-surface: #d1d5db;
+            --on-surface-secondary: #9ca3af;
+        }
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--on-surface);
+        }
+        /* 스크롤바 스타일 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--surface); }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px;}
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        /* 브라우저 자동 완성 스타일 덮어쓰기 */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+            -webkit-text-fill-color: #ffffff !important;
+            -webkit-box-shadow: 0 0 0 30px var(--surface) inset !important;
+            box-shadow: 0 0 0 30px var(--surface) inset !important;
+        }
+        
+        /* 검색창 스타일 강제 지정 */
+        #search-input {
+            background-color: var(--surface) !important;
+            color: var(--on-surface) !important;
+        }
+        #search-input::placeholder {
+            color: var(--on-surface-secondary);
+        }
+
+        /* 업적 게이지 애니메이션 */
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+
+        /* 줄거리 더보기 스타일 */
+        .overview-truncated {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="app" class="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl md:text-3xl font-bold text-white">My Anime Checklist 📝</h1>
+        </header>
+
+        <!-- Achievements -->
+        <div id="achievement-container" class="bg-surface rounded-lg p-4 mb-6 shadow-lg">
+            <div id="achievement-header" class="flex justify-between items-center">
+                <h2 class="text-lg font-bold text-white">업적 달성 🏆</h2>
+            </div>
+            <div id="achievement-details" class="mt-4">
+                <!-- Single achievement goal will be dynamically inserted here -->
+            </div>
+        </div>
+        
+        <!-- Search and Add Section -->
+        <div class="mb-6 relative">
+            <input type="text" id="search-input" placeholder="애니메이션 제목으로 검색 (예: 주술회전)" class="w-full bg-surface border border-gray-600 rounded-lg py-3 px-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary">
+            <div id="search-results" class="absolute z-10 w-full mt-2 bg-[#2a374a] rounded-lg shadow-xl max-h-80 overflow-y-auto hidden">
+                <!-- Search results will appear here -->
+            </div>
+        </div>
+
+        <!-- My List Section -->
+        <div>
+            <div class="flex border-b border-gray-700 mb-4">
+                <button data-status="all" class="list-tab py-2 px-4 text-sm font-medium text-white border-b-2 border-primary focus:outline-none">전체</button>
+                <button data-status="watching" class="list-tab py-2 px-4 text-sm font-medium text-gray-400 hover:text-white border-b-2 border-transparent focus:outline-none">시청 중</button>
+                <button data-status="completed" class="list-tab py-2 px-4 text-sm font-medium text-gray-400 hover:text-white border-b-2 border-transparent focus:outline-none">완료</button>
+                <button data-status="planned" class="list-tab py-2 px-4 text-sm font-medium text-gray-400 hover:text-white border-b-2 border-transparent focus:outline-none">시청 예정</button>
+                <button data-status="dropped" class="list-tab py-2 px-4 text-sm font-medium text-gray-400 hover:text-white border-b-2 border-transparent focus:outline-none">중단</button>
+            </div>
+            <div id="my-list-container" class="space-y-3">
+                <!-- Anime items will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Unified Info/Edit Modal -->
+    <div id="info-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-surface rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div id="info-modal-content" class="p-6 flex-grow overflow-y-auto">
+                 <!-- Loading spinner -->
+                 <div id="info-loader" class="text-center p-8">
+                    <p class="text-white">정보를 불러오는 중...</p>
+                </div>
+                <!-- Actual content -->
+                <div id="info-content-wrapper" class="hidden md:grid md:grid-cols-3 md:gap-8">
+                    <!-- Left Column: Poster & Overview -->
+                    <div class="md:col-span-2">
+                        <h3 class="text-2xl font-bold mb-4 text-white" id="info-title"></h3>
+                        <div class="flex flex-col sm:flex-row">
+                             <img id="info-poster" src="" alt="Anime Poster" class="w-32 h-auto sm:w-40 flex-shrink-0 mr-6 mb-4 rounded-md">
+                             <div>
+                                 <p id="info-overview" class="text-gray-300 leading-relaxed"></p>
+                                 <button id="overview-toggle" class="text-primary hover:underline mt-2 text-sm hidden">더보기...</button>
+                             </div>
+                        </div>
+                    </div>
+                    <!-- Right Column: Edit Controls -->
+                    <div class="md:col-span-1 mt-6 md:mt-0">
+                         <div class="space-y-4 bg-gray-900/50 p-4 rounded-lg">
+                            <div>
+                                <label for="modal-status" class="block text-sm font-medium text-gray-400 mb-1">시청 상태</label>
+                                <select id="modal-status" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <option value="watching">시청 중</option>
+                                    <option value="completed">완료</option>
+                                    <option value="planned">시청 예정</option>
+                                    <option value="dropped">중단</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="modal-score" class="block text-sm font-medium text-gray-400 mb-1">점수</label>
+                                <select id="modal-score" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <option value="0">미선택</option>
+                                    <option value="10">10 (Masterpiece)</option>
+                                    <option value="9">9 (Great)</option>
+                                    <option value="8">8 (Very Good)</option>
+                                    <option value="7">7 (Good)</option>
+                                    <option value="6">6 (Fine)</option>
+                                    <option value="5">5 (Average)</option>
+                                    <option value="4">4 (Bad)</option>
+                                    <option value="3">3 (Very Bad)</option>
+                                    <option value="2">2 (Horrible)</option>
+                                    <option value="1">1 (Appalling)</option>
+                                </select>
+                            </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 bg-gray-900/50 flex justify-between items-center flex-shrink-0">
+                 <button id="modal-delete" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-md transition text-sm">리스트에서 삭제</button>
+                 <div class="space-x-3">
+                    <button id="modal-cancel" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-md transition">취소</button>
+                    <button id="modal-save" class="px-4 py-2 bg-primary hover:bg-blue-700 text-white font-semibold rounded-md transition">저장</button>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const TMDB_API_KEY = '9a5e26536e343678fc2a6147946e748a'; 
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+            const firebaseConfig = typeof __firebase_config !== 'undefined'
+                ? JSON.parse(__firebase_config)
+                : {
+                    apiKey: "INVALID_API_KEY",
+                    authDomain: "...",
+                    projectId: "...",
+                    storageBucket: "...",
+                    messagingSenderId: "...",
+                    appId: "..."
+                };
+
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            const auth = getAuth(app);
+            let userId = null;
+            let userList = {};
+            
+            let currentEditingId = null;
+            let currentFilter = 'all'; 
+
+            // UI Elements
+            const searchInput = document.getElementById('search-input');
+            const searchResultsContainer = document.getElementById('search-results');
+            const myListContainer = document.getElementById('my-list-container');
+            const tabs = document.querySelectorAll('.list-tab');
+
+            // Modal Elements
+            const infoModal = document.getElementById('info-modal');
+            const modalStatus = document.getElementById('modal-status');
+            const modalScore = document.getElementById('modal-score');
+            const overviewEl = document.getElementById('info-overview');
+            const overviewToggleBtn = document.getElementById('overview-toggle');
+            
+            const achievements = [
+                { level: 1, count: 1,   name: "새싹", emoji: "🌱" },
+                { level: 2, count: 30,  name: "애니 애호가", emoji: "🧡" },
+                { level: 3, count: 100, name: "애니 전문가", emoji: "🎓" },
+                { level: 4, count: 300, name: "오타쿠", emoji: "🏆" },
+                { level: 5, count: 500, name: "망령", emoji: "👻" }
+            ];
+
+            function loadUserList() {
+                if (!userId) return;
+                const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/animeChecklist`, "data");
+                onSnapshot(userDocRef, (doc) => {
+                    if (doc.exists()) {
+                        userList = doc.data();
+                    } else {
+                        userList = {};
+                    }
+                    renderMyList();
+                    updateAchievements();
+                });
+            }
+            
+            function debounce(func, delay) {
+                let timeout;
+                return function(...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(this, args), delay);
+                };
+            }
+
+            async function handleSearchInput() {
+                const searchTerm = searchInput.value.trim();
+                if (searchTerm.length < 2) {
+                    searchResultsContainer.classList.add('hidden');
+                    return;
+                }
+                searchResultsContainer.innerHTML = `<div class="p-4 text-center text-gray-400">검색 중...</div>`;
+                searchResultsContainer.classList.remove('hidden');
+                try {
+                    const url = `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_API_KEY}&language=ko-KR&query=${encodeURIComponent(searchTerm)}&include_adult=false`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const data = await response.json();
+                    const animeResults = data.results.filter(item => 
+                        item.origin_country.includes('JP') || 
+                        (item.genre_ids && item.genre_ids.includes(16))
+                    );
+                    renderSearchResults(animeResults);
+                } catch (error) {
+                    console.error("Search failed:", error);
+                    searchResultsContainer.innerHTML = `<div class="p-4 text-center text-red-400">검색에 실패했습니다.</div>`;
+                }
+            }
+
+            function renderSearchResults(results) {
+                if (results.length === 0) {
+                    searchResultsContainer.innerHTML = `<div class="p-4 text-center text-gray-400">검색 결과가 없습니다.</div>`;
+                    return;
+                }
+                searchResultsContainer.innerHTML = results.map(anime => {
+                    const year = anime.first_air_date ? anime.first_air_date.split('-')[0] : 'N/A';
+                    const posterPath = anime.poster_path ? `https://image.tmdb.org/t/p/w92${anime.poster_path}` : 'https://placehold.co/45x68/374151/9ca3af?text=N/A';
+                    return `
+                        <div class="flex items-center p-3 hover:bg-gray-700 cursor-pointer" data-anime-id="${anime.id}" data-anime-title="${escape(anime.name)}" data-anime-year="${year}" data-poster-url="${posterPath}">
+                            <img src="${posterPath}" alt="${anime.name}" class="w-10 h-15 object-cover rounded-sm mr-4">
+                            <div class="flex-grow">
+                                <p class="font-semibold text-white">${anime.name}</p>
+                                <p class="text-sm text-gray-300">${year}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            function addAnimeToList(animeData) {
+                const animeId = animeData.id;
+                if (userList[animeId]) {
+                    alert('이미 리스트에 추가된 애니메이션입니다.');
+                    return;
+                }
+                userList[animeId] = {
+                    id: animeId,
+                    title: animeData.title,
+                    year: animeData.year,
+                    posterUrl: animeData.posterUrl,
+                    status: 'planned',
+                    score: 0,
+                    addedAt: Date.now()
+                };
+                renderMyList();
+                updateAchievements();
+                saveUserList();
+                searchInput.value = '';
+                searchResultsContainer.classList.add('hidden');
+            }
+
+            const statusColors = {
+                watching: {
+                    border: 'border-blue-500',
+                    bg: 'bg-blue-900/30',
+                    text: 'text-blue-400'
+                },
+                completed: {
+                    border: 'border-green-500',
+                    bg: 'bg-green-900/30',
+                    text: 'text-green-400'
+                },
+                planned: {
+                    border: 'border-yellow-500',
+                    bg: 'bg-yellow-900/30',
+                    text: 'text-yellow-400'
+                },
+                dropped: {
+                    border: 'border-red-500',
+                    bg: 'bg-red-900/30',
+                    text: 'text-red-400'
+                },
+                default: {
+                    border: 'border-gray-600',
+                    bg: 'bg-surface',
+                    text: 'text-gray-500'
+                }
+            };
+            
+            function renderMyList() {
+                if (!myListContainer) return;
+                const filteredList = Object.entries(userList)
+                    .filter(([id, data]) => currentFilter === 'all' || data.status === currentFilter)
+                    .sort(([, a], [, b]) => b.addedAt - a.addedAt);
+
+                if (filteredList.length === 0) {
+                    myListContainer.innerHTML = `<div class="text-center py-10 text-gray-500">
+                        <p>${currentFilter === 'all' ? '리스트가 비어있습니다.' : `'${getFilterName(currentFilter)}' 상태의 애니가 없습니다.`}</p>
+                        <p class="text-sm mt-2">검색창에서 애니를 추가해보세요!</p>
+                    </div>`;
+                    return;
+                }
+
+                myListContainer.innerHTML = filteredList.map(([id, data]) => {
+                    const colors = statusColors[data.status] || statusColors.default;
+                    return `
+                        <div id="item-${id}" class="p-3 rounded-lg flex items-center space-x-4 shadow-md border-l-4 cursor-pointer anime-item ${colors.border} ${colors.bg}" data-anime-id="${id}">
+                            <img src="${data.posterUrl}" onerror="this.src='https://placehold.co/45x68/374151/9ca3af?text=N/A'" alt="${data.title}" class="w-10 h-15 object-cover rounded-sm flex-shrink-0">
+                            <div class="flex-grow min-w-0">
+                                <p class="font-bold text-white truncate">${data.title}</p>
+                                <p class="text-sm text-gray-400">${data.year}</p>
+                            </div>
+                            <div class="text-right flex-shrink-0">
+                                <p class="font-semibold text-lg ${data.score > 0 ? 'text-primary' : 'text-gray-500'}">${data.score > 0 ? data.score : 'N/A'}</p>
+                                <p class="text-xs font-semibold ${colors.text}">${getFilterName(data.status)}</p>
+                            </div>
+                        </div>
+                    `
+                }).join('');
+            }
+
+            function updateAchievements() {
+                const achievementDetails = document.getElementById('achievement-details');
+                if (!achievementDetails) return; 
+
+                const completedCount = Object.values(userList).filter(item => item.status === 'completed').length;
+                let currentAchievement = null;
+                for (let i = achievements.length - 1; i >= 0; i--) {
+                    if (completedCount >= achievements[i].count) {
+                        currentAchievement = achievements[i];
+                        break;
+                    }
+                }
+
+                const nextGoal = achievements.find(ach => completedCount < ach.count);
+                const displayAchievement = currentAchievement || achievements[0];
+                let progressText;
+                let progressTarget;
+
+                if (nextGoal) {
+                    progressText = `다음: ${nextGoal.name} (${completedCount}/${nextGoal.count})`;
+                    progressTarget = nextGoal.count;
+                } else {
+                    progressText = '최고 등급 달성!';
+                    progressTarget = currentAchievement ? currentAchievement.count : 0;
+                }
+                
+                const progressWidth = (progressTarget > 0) ? Math.min(100, (completedCount / progressTarget) * 100) : 0;
+
+                achievementDetails.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="text-3xl mr-4">${displayAchievement.emoji}</div>
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-baseline">
+                                <p class="font-bold text-white">${displayAchievement.name}</p>
+                                <p class="text-sm text-gray-400">${progressText}</p>
+                            </div>
+                            <div class="w-full bg-gray-700 rounded-full h-2 mt-1">
+                                <div class="progress-bar bg-primary h-2 rounded-full" style="width: ${progressWidth}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            async function openInfoModal(animeId) {
+                currentEditingId = animeId;
+                const anime = userList[animeId];
+                if (!anime) return;
+
+                const infoContentWrapper = document.getElementById('info-content-wrapper');
+                const infoLoader = document.getElementById('info-loader');
+
+                infoLoader.classList.remove('hidden');
+                infoContentWrapper.classList.add('hidden');
+                infoModal.classList.remove('hidden');
+
+                modalStatus.value = anime.status;
+                modalScore.value = anime.score;
+
+                try {
+                    const url = `https://api.themoviedb.org/3/tv/${animeId}?api_key=${TMDB_API_KEY}&language=ko-KR`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Failed to fetch details');
+                    const data = await response.json();
+
+                    document.getElementById('info-title').textContent = data.name;
+                    const posterPath = data.poster_path ? `https://image.tmdb.org/t/p/w300${data.poster_path}` : 'https://placehold.co/300x450/374151/9ca3af?text=N/A';
+                    document.getElementById('info-poster').src = posterPath;
+                    
+                    const overview = data.overview || '줄거리 정보가 없습니다.';
+                    overviewEl.textContent = overview;
+
+                    // "Read More" logic with setTimeout for stable rendering
+                    setTimeout(() => {
+                        overviewEl.classList.add('overview-truncated');
+                        if (overviewEl.scrollHeight > overviewEl.clientHeight) {
+                            overviewToggleBtn.classList.remove('hidden');
+                            overviewToggleBtn.textContent = '더보기...';
+                        } else {
+                            overviewToggleBtn.classList.add('hidden');
+                        }
+                    }, 100); // 100ms delay to ensure rendering
+
+                    infoLoader.classList.add('hidden');
+                    infoContentWrapper.classList.remove('hidden');
+
+                } catch (error) {
+                    console.error("Failed to fetch anime details:", error);
+                    document.getElementById('info-modal-content').innerHTML = `<p class="text-red-400 text-center">정보를 불러오는데 실패했습니다.</p>`;
+                }
+            }
+
+            function closeInfoModal() {
+                infoModal.classList.add('hidden');
+            }
+
+            function saveChanges() {
+                if (!currentEditingId || !userList[currentEditingId]) return;
+                const button = document.getElementById('modal-save');
+                button.disabled = true;
+                button.textContent = '저장 중...';
+                userList[currentEditingId].status = modalStatus.value;
+                userList[currentEditingId].score = parseInt(modalScore.value, 10);
+                renderMyList();
+                updateAchievements();
+                closeInfoModal();
+                saveUserList().finally(() => {
+                    button.disabled = false;
+                    button.textContent = '저장';
+                });
+            }
+
+            function deleteItem() {
+                if (!currentEditingId || !userList[currentEditingId]) return;
+                delete userList[currentEditingId];
+                renderMyList();
+                updateAchievements();
+                closeInfoModal();
+                saveUserList();
+            }
+            
+            async function saveUserList() {
+                if (!userId) return;
+                try {
+                    const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/animeChecklist`, "data");
+                    await setDoc(userDocRef, userList);
+                } catch (error) {
+                    console.error("Error saving user list: ", error);
+                }
+            }
+            
+            function getFilterName(status) {
+                switch(status) {
+                    case 'watching': return '시청 중';
+                    case 'completed': return '완료';
+                    case 'planned': return '시청 예정';
+                    case 'dropped': return '중단';
+                    case 'all': return '전체';
+                    default: return '';
+                }
+            }
+            
+            // Event Listeners
+            const debouncedSearch = debounce(handleSearchInput, 300);
+            searchInput.addEventListener('input', debouncedSearch);
+            
+            searchResultsContainer.addEventListener('click', (e) => {
+                const resultItem = e.target.closest('[data-anime-id]');
+                if (resultItem) {
+                    const animeData = {
+                        id: resultItem.dataset.animeId,
+                        title: unescape(resultItem.dataset.animeTitle),
+                        year: resultItem.dataset.animeYear,
+                        posterUrl: resultItem.dataset.posterUrl
+                    };
+                    addAnimeToList(animeData);
+                }
+            });
+            
+            myListContainer.addEventListener('click', (e) => {
+                const item = e.target.closest('.anime-item');
+                if (item) {
+                    openInfoModal(item.dataset.animeId);
+                }
+            });
+
+            overviewToggleBtn.addEventListener('click', () => {
+                overviewEl.classList.toggle('overview-truncated');
+                if (overviewEl.classList.contains('overview-truncated')) {
+                    overviewToggleBtn.textContent = '더보기...';
+                } else {
+                    overviewToggleBtn.textContent = '접기';
+                }
+            });
+
+            document.getElementById('modal-save').addEventListener('click', saveChanges);
+            document.getElementById('modal-cancel').addEventListener('click', closeInfoModal);
+            document.getElementById('modal-delete').addEventListener('click', deleteItem);
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    tabs.forEach(t => {
+                        t.classList.remove('text-white', 'border-primary');
+                        t.classList.add('text-gray-400', 'border-transparent');
+                    });
+                    e.target.classList.add('text-white', 'border-primary');
+                    e.target.classList.remove('text-gray-400', 'border-transparent');
+                    currentFilter = e.target.dataset.status;
+                    renderMyList();
+                });
+            });
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    loadUserList();
+                } else {
+                    try {
+                        await signInAnonymously(auth);
+                    } catch (error) {
+                        console.error("Anonymous sign-in failed:", error);
+                    }
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
