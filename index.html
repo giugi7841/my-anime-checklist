@@ -58,14 +58,21 @@
 <body class="antialiased">
 
     <!-- Login View -->
-    <div id="login-view" class="fixed inset-0 flex items-center justify-center hidden">
-        <div class="text-center p-4">
+    <div id="login-view" class="fixed inset-0 flex items-center justify-center hidden p-4">
+        <div class="w-full max-w-sm text-center">
             <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">My Anime Checklist 📝</h1>
             <p class="text-gray-400 mb-8">당신의 애니 여정을 기록하고 성장시키세요.</p>
-            <button id="login-btn" class="bg-white text-gray-800 font-semibold py-3 px-6 rounded-lg flex items-center justify-center shadow-lg hover:bg-gray-200 transition">
-                <svg class="w-6 h-6 mr-3" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></svg>
-                Google 계정으로 로그인
-            </button>
+            <div class="space-y-4">
+                <button id="login-btn" class="w-full bg-white text-gray-800 font-semibold py-3 px-6 rounded-lg flex items-center justify-center shadow-lg hover:bg-gray-200 transition">
+                    <svg class="w-6 h-6 mr-3" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></svg>
+                    Google 계정으로 로그인
+                </button>
+                <p class="text-xs text-gray-500">모든 기기에서 데이터를 동기화하세요.</p>
+                <button id="guest-login-btn" class="w-full bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:bg-gray-700 transition">
+                    게스트로 계속하기
+                </button>
+                 <p class="text-xs text-gray-500">기록은 현재 사용 중인 기기에만 저장됩니다.</p>
+            </div>
         </div>
     </div>
 
@@ -75,9 +82,7 @@
         <header class="flex justify-between items-center mb-6">
             <h1 class="text-xl md:text-2xl font-bold text-white">My Anime Checklist 📝</h1>
             <div id="user-profile" class="flex items-center space-x-3 hidden">
-                <img id="user-avatar" class="w-8 h-8 md:w-10 md:h-10 rounded-full" src="" alt="User Avatar">
-                <span id="user-name" class="text-sm md:text-base text-white font-semibold hidden sm:inline"></span>
-                <button id="logout-btn" class="text-xs bg-gray-600 hover:bg-gray-700 text-white font-semibold py-1 px-3 rounded-md transition">로그아웃</button>
+                <!-- Guest / User Info -->
             </div>
         </header>
 
@@ -153,7 +158,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         
         document.addEventListener('DOMContentLoaded', () => {
             const TMDB_API_KEY = '9a5e26536e343678fc2a6147946e748a'; 
@@ -170,13 +175,12 @@
             let currentEditingId = null;
             let currentFilter = 'all';
 
+            // --- UI Elements ---
             const loginView = document.getElementById('login-view');
             const appView = document.getElementById('app');
             const loginBtn = document.getElementById('login-btn');
-            const logoutBtn = document.getElementById('logout-btn');
+            const guestLoginBtn = document.getElementById('guest-login-btn');
             const userProfile = document.getElementById('user-profile');
-            const userAvatar = document.getElementById('user-avatar');
-            const userName = document.getElementById('user-name');
             const searchInput = document.getElementById('search-input');
             const searchResultsContainer = document.getElementById('search-results');
             const myListContainer = document.getElementById('my-list-container');
@@ -195,14 +199,27 @@
                 { level: 5, count: 500, name: "망령", emoji: "👻" }
             ];
 
+            // --- Authentication ---
             onAuthStateChanged(auth, user => {
                 if (user) {
                     userId = user.uid;
-                    userName.textContent = user.displayName;
-                    userAvatar.src = user.photoURL;
                     loginView.classList.add('hidden');
                     appView.classList.remove('hidden');
                     userProfile.classList.remove('hidden');
+                    
+                    if (user.isAnonymous) {
+                        userProfile.innerHTML = `
+                            <span class="text-sm md:text-base text-yellow-400 font-semibold">게스트 모드</span>
+                            <button id="logout-btn" class="text-xs bg-gray-600 hover:bg-gray-700 text-white font-semibold py-1 px-3 rounded-md transition">나가기</button>
+                        `;
+                    } else {
+                        userProfile.innerHTML = `
+                            <img id="user-avatar" class="w-8 h-8 md:w-10 md:h-10 rounded-full" src="${user.photoURL}" alt="User Avatar">
+                            <span id="user-name" class="text-sm md:text-base text-white font-semibold hidden sm:inline">${user.displayName}</span>
+                            <button id="logout-btn" class="text-xs bg-gray-600 hover:bg-gray-700 text-white font-semibold py-1 px-3 rounded-md transition">로그아웃</button>
+                        `;
+                    }
+                    document.getElementById('logout-btn').addEventListener('click', logout);
                     loadUserList();
                 } else {
                     userId = null;
@@ -223,15 +240,26 @@
                 } catch (error) {
                     console.error("Google sign-in failed:", error);
                     if (error.code === 'auth/unauthorized-domain') {
-                        alert("로그인 실패: 이 웹사이트의 주소가 Firebase에 등록되지 않았습니다. Firebase 콘솔의 Authentication > Settings > 승인된 도메인에 이 웹사이트의 주소를 추가해주세요.");
+                        const domain = window.location.hostname;
+                        alert(`로그인 실패: 승인되지 않은 도메인입니다.\n\n이 문제를 해결하려면 Firebase 콘솔에 현재 도메인을 추가해야 합니다.\n\n1. Firebase 콘솔로 이동하세요.\n2. [Authentication] > [Settings] 탭으로 가세요.\n3. '승인된 도메인' 섹션에서 [도메인 추가]를 누르세요.\n4. 다음 도메인을 정확히 추가하세요: ${domain}`);
                     } else {
                         alert("로그인에 실패했습니다. 팝업이 차단되었는지 확인해주세요.");
                     }
                 }
             }
+            
+            async function signInAsGuest() {
+                try {
+                    await signInAnonymously(auth);
+                } catch (error) {
+                    console.error("Guest sign-in failed:", error);
+                    alert("게스트 로그인에 실패했습니다. 다시 시도해주세요.");
+                }
+            }
 
             async function logout() {
                 try {
+                    if (auth.currentUser && auth.currentUser.isAnonymous) {}
                     await signOut(auth);
                 } catch (error) {
                     console.error("Sign-out failed:", error);
@@ -301,9 +329,9 @@
             
             // --- Event Listeners ---
             loginBtn.addEventListener('click', signInWithGoogle);
-            logoutBtn.addEventListener('click', logout);
+            guestLoginBtn.addEventListener('click', signInAsGuest);
             searchInput.addEventListener('input', debouncedSearch);
-            searchResultsContainer.addEventListener('click', e => { const item = e.target.closest('[data-anime-id]'); if (item) addAnimeToList(JSON.parse(JSON.stringify(item.dataset))); });
+            searchResultsContainer.addEventListener('click', e => { const item = e.target.closest('[data-anime-id]'); if (item) addAnimeToList(item.dataset); });
             myListContainer.addEventListener('click', e => { const item = e.target.closest('.anime-item'); if (item) openInfoModal(item.dataset.animeId); });
             overviewToggleBtn.addEventListener('click', () => { overviewEl.classList.toggle('overview-truncated'); overviewToggleBtn.textContent = overviewEl.classList.contains('overview-truncated') ? '더보기...' : '접기'; });
             document.getElementById('modal-save').addEventListener('click', saveChanges);
