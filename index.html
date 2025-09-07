@@ -134,23 +134,11 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
             const TMDB_API_KEY = '9a5e26536e343678fc2a6147946e748a'; 
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const firebaseConfig = typeof __firebase_config !== 'undefined'
-                ? JSON.parse(__firebase_config) : { apiKey: "INVALID_API_KEY", authDomain: "...", projectId: "...", appId: "..." };
-
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
-            const auth = getAuth(app);
-            let userId = null;
+            
             let userList = {};
-            let unsubscribe = null; 
             let currentEditingId = null;
             let currentFilter = 'all';
 
@@ -172,40 +160,23 @@
                 { level: 5, count: 500, name: "망령", emoji: "👻" }
             ];
 
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    userId = user.uid;
-                    loadUserList();
-                } else {
-                    try {
-                        await signInAnonymously(auth);
-                    } catch (error) {
-                        console.error("Anonymous sign-in failed:", error);
-                    }
-                }
-            });
-
+            // --- LOCAL STORAGE FUNCTIONS ---
             function loadUserList() {
-                 if (!userId) return;
-                if (unsubscribe) unsubscribe();
-                const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/animeChecklist`, "data");
-                unsubscribe = onSnapshot(userDocRef, (doc) => {
-                    userList = doc.exists() ? doc.data() : {};
-                    renderMyList();
-                    updateAchievements();
-                });
-            }
-            
-            async function saveUserList() {
-                if (!userId) return;
-                try {
-                    const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/animeChecklist`, "data");
-                    await setDoc(userDocRef, userList);
-                } catch (error) {
-                    console.error("Error saving user list: ", error);
+                const savedList = localStorage.getItem('myAnimeList');
+                if (savedList) {
+                    userList = JSON.parse(savedList);
+                } else {
+                    userList = {};
                 }
+                renderMyList();
+                updateAchievements();
             }
             
+            function saveUserList() {
+                localStorage.setItem('myAnimeList', JSON.stringify(userList));
+            }
+            
+            // --- CORE APP LOGIC ---
             function debounce(func, delay) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => func.apply(this, a), delay); }; }
             const debouncedSearch = debounce(handleSearchInput, 300);
             
@@ -241,14 +212,8 @@
             
             function addAnimeToList(animeData) {
                 const animeId = animeData.id;
-                if (!animeId) {
-                    console.error("Invalid anime data provided:", animeData);
-                    return;
-                }
-                if (userList[animeId]) {
-                    alert('이미 리스트에 있습니다.');
-                    return;
-                }
+                if (!animeId) { console.error("Invalid anime data provided:", animeData); return; }
+                if (userList[animeId]) { alert('이미 리스트에 있습니다.'); return; }
                 userList[animeId] = {
                     id: animeId,
                     title: decodeURIComponent(animeData.title),
@@ -321,7 +286,7 @@
             }
             
             function closeInfoModal() { infoModal.classList.add('hidden'); }
-            function saveChanges() { if (!currentEditingId || !userList[currentEditingId]) return; const button = document.getElementById('modal-save'); button.disabled = true; button.textContent = '저장 중...'; userList[currentEditingId].status = modalStatus.value; userList[currentEditingId].score = parseInt(modalScore.value, 10); renderMyList(); updateAchievements(); closeInfoModal(); saveUserList().finally(() => { button.disabled = false; button.textContent = '저장'; }); }
+            function saveChanges() { if (!currentEditingId || !userList[currentEditingId]) return; const button = document.getElementById('modal-save'); button.disabled = true; button.textContent = '저장 중...'; userList[currentEditingId].status = modalStatus.value; userList[currentEditingId].score = parseInt(modalScore.value, 10); renderMyList(); updateAchievements(); closeInfoModal(); saveUserList(); button.disabled = false; button.textContent = '저장'; }
             function deleteItem() { if (!currentEditingId || !userList[currentEditingId]) return; delete userList[currentEditingId]; renderMyList(); updateAchievements(); closeInfoModal(); saveUserList(); }
             
             searchInput.addEventListener('input', debouncedSearch);
@@ -330,7 +295,7 @@
                 if (item) {
                      const animeData = {
                          id: item.getAttribute('data-anime-id'),
-                         title: item.getAttribute('data-anime-title'),
+                         title: decodeURIComponent(item.getAttribute('data-anime-title')),
                          year: item.getAttribute('data-anime-year'),
                          posterUrl: item.getAttribute('data-poster-url')
                      };
@@ -348,6 +313,9 @@
             document.getElementById('modal-cancel').addEventListener('click', closeInfoModal);
             document.getElementById('modal-delete').addEventListener('click', deleteItem);
             tabs.forEach(tab => { tab.addEventListener('click', e => { tabs.forEach(t => t.classList.replace('text-white', 'text-gray-400') || t.classList.replace('border-primary', 'border-transparent')); e.target.classList.replace('text-gray-400', 'text-white'); e.target.classList.replace('border-transparent', 'border-primary'); currentFilter = e.target.dataset.status; renderMyList(); }); });
+
+            // Initial Load
+            loadUserList();
         });
     </script>
 </body>
