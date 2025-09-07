@@ -232,7 +232,7 @@
                 searchResultsContainer.innerHTML = results.map(anime => {
                     const year = anime.first_air_date ? anime.first_air_date.split('-')[0] : 'N/A';
                     const posterPath = anime.poster_path ? `https://image.tmdb.org/t/p/w92${anime.poster_path}` : 'https://placehold.co/45x68/374151/9ca3af?text=N/A';
-                    return `<div class="flex items-center p-3 hover:bg-gray-700 cursor-pointer" data-anime-id="${anime.id}" data-anime-title="${escape(anime.name)}" data-anime-year="${year}" data-poster-url="${posterPath}"><img src="${posterPath}" alt="${anime.name}" class="w-10 h-15 object-cover rounded-sm mr-4"><div><p class="font-semibold text-white">${anime.name}</p><p class="text-sm text-gray-300">${year}</p></div></div>`;
+                    return `<div class="flex items-center p-3 hover:bg-gray-700 cursor-pointer" data-anime-id="${anime.id}" data-anime-title="${encodeURIComponent(anime.name)}" data-anime-year="${year}" data-poster-url="${posterPath}"><img src="${posterPath}" alt="${anime.name}" class="w-10 h-15 object-cover rounded-sm mr-4"><div><p class="font-semibold text-white">${anime.name}</p><p class="text-sm text-gray-300">${year}</p></div></div>`;
                 }).join('');
             }
             
@@ -240,7 +240,7 @@
             function getFilterName(status) { switch (status) { case 'watching': return '시청 중'; case 'completed': return '완료'; case 'planned': return '시청 예정'; case 'dropped': return '중단'; case 'all': return '전체'; default: return ''; } }
             
             function addAnimeToList(animeData) {
-                const animeId = animeData.animeId; // CORRECTED
+                const animeId = animeData.id;
                 if (!animeId) {
                     console.error("Invalid anime data provided:", animeData);
                     return;
@@ -251,8 +251,8 @@
                 }
                 userList[animeId] = {
                     id: animeId,
-                    title: unescape(animeData.animeTitle), // CORRECTED
-                    year: animeData.animeYear, // CORRECTED
+                    title: decodeURIComponent(animeData.title),
+                    year: animeData.year,
                     posterUrl: animeData.posterUrl,
                     status: 'planned',
                     score: 0,
@@ -328,13 +328,19 @@
             searchResultsContainer.addEventListener('click', e => { 
                 const item = e.target.closest('[data-anime-id]'); 
                 if (item) {
-                     addAnimeToList(item.dataset);
+                     const animeData = {
+                         id: item.getAttribute('data-anime-id'),
+                         title: item.getAttribute('data-anime-title'),
+                         year: item.getAttribute('data-anime-year'),
+                         posterUrl: item.getAttribute('data-poster-url')
+                     };
+                     addAnimeToList(animeData);
                 }
             });
             myListContainer.addEventListener('click', e => { 
                 const item = e.target.closest('.anime-item'); 
                 if (item) {
-                    openInfoModal(item.dataset.animeId);
+                    openInfoModal(item.getAttribute('data-anime-id'));
                 }
             });
             overviewToggleBtn.addEventListener('click', () => { overviewEl.classList.toggle('overview-truncated'); overviewToggleBtn.textContent = overviewEl.classList.contains('overview-truncated') ? '더보기...' : '접기'; });
