@@ -199,18 +199,9 @@
             ];
 
             // --- Authentication ---
-            
-            // Handle the redirect result when the user comes back to the app
-            getRedirectResult(auth)
-              .catch((error) => {
+            getRedirectResult(auth).catch((error) => {
                 console.error("Google sign-in redirect result error:", error);
-                if (error.code === 'auth/unauthorized-domain') {
-                    const domain = window.location.hostname;
-                    alert(`로그인 실패(auth/unauthorized-domain): 현재 앱의 주소가 Firebase에 등록되지 않았습니다.\n\n[해결 방법]\n1. Firebase 콘솔로 이동하세요.\n2. [Authentication] > [Settings] 탭으로 가세요.\n3. '승인된 도메인' 섹션에서 [도메인 추가]를 누르세요.\n4. 다음 도메인을 정확히 추가하세요: ${domain}`);
-                } else {
-                    alert("로그인 과정에서 오류가 발생했습니다.");
-                }
-              });
+            });
 
             onAuthStateChanged(auth, user => {
                 if (user) {
@@ -251,7 +242,12 @@
                     await signInWithRedirect(auth, provider);
                 } catch (error) {
                     console.error("Google sign-in redirect failed to start:", error);
-                    alert("로그인 과정 시작에 실패했습니다.");
+                     if (error.code === 'auth/unauthorized-domain') {
+                        const domain = window.location.hostname;
+                        alert(`로그인 실패(auth/unauthorized-domain): 현재 앱의 주소가 Firebase에 등록되지 않았습니다.\n\n[해결 방법]\n1. Firebase 콘솔로 이동하세요.\n2. [Authentication] > [Settings] 탭으로 가세요.\n3. '승인된 도메인' 섹션에서 [도메인 추가]를 누르세요.\n4. 다음 도메인을 정확히 추가하세요: ${domain}`);
+                    } else {
+                        alert("로그인 과정 시작에 실패했습니다.");
+                    }
                 }
             }
             
