@@ -57,20 +57,41 @@
 </head>
 <body class="antialiased">
 
-    <div id="app" class="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
+    <!-- Login View -->
+    <div id="login-view" class="fixed inset-0 flex items-center justify-center hidden p-4">
+        <div class="w-full max-w-sm text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">My Anime Checklist 📝</h1>
+            <p class="text-gray-400 mb-8">당신의 애니 여정을 기록하고 성장시키세요.</p>
+            <div class="space-y-4">
+                <button id="login-btn" class="w-full bg-white text-gray-800 font-semibold py-3 px-6 rounded-lg flex items-center justify-center shadow-lg hover:bg-gray-200 transition">
+                    <svg class="w-6 h-6 mr-3" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></svg>
+                    Google 계정으로 로그인
+                </button>
+                <p class="text-xs text-gray-500">모든 기기에서 데이터를 동기화하세요.</p>
+                <button id="guest-login-btn" class="w-full bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:bg-gray-700 transition">
+                    게스트로 계속하기
+                </button>
+                 <p class="text-xs text-gray-500">기록은 현재 사용 중인 기기에만 저장됩니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App View -->
+    <div id="app" class="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 hidden">
         <!-- Header -->
         <header class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl md:text-3xl font-bold text-white">My Anime Checklist 📝</h1>
+            <h1 class="text-xl md:text-2xl font-bold text-white">My Anime Checklist 📝</h1>
+            <div id="user-profile" class="flex items-center space-x-3 hidden">
+                <!-- Guest / User Info -->
+            </div>
         </header>
 
         <!-- Achievements -->
         <div id="achievement-container" class="bg-surface rounded-lg p-4 mb-6 shadow-lg">
-            <div id="achievement-header" class="flex justify-between items-center">
+             <div id="achievement-header" class="flex justify-between items-center">
                 <h2 class="text-lg font-bold text-white">업적 달성 🏆</h2>
             </div>
-            <div id="achievement-details" class="mt-4">
-                <!-- Single achievement goal will be dynamically inserted here -->
-            </div>
+            <div id="achievement-details" class="mt-4"></div>
         </div>
         
         <!-- Search and Add Section -->
@@ -134,14 +155,31 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        
         document.addEventListener('DOMContentLoaded', () => {
             const TMDB_API_KEY = '9a5e26536e343678fc2a6147946e748a'; 
-            
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const firebaseConfig = typeof __firebase_config !== 'undefined'
+                ? JSON.parse(__firebase_config) : { apiKey: "INVALID_API_KEY", authDomain: "...", projectId: "...", appId: "..." };
+
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            const auth = getAuth(app);
+            let userId = null;
             let userList = {};
+            let unsubscribe = null; 
             let currentEditingId = null;
             let currentFilter = 'all';
 
+            const loginView = document.getElementById('login-view');
+            const appView = document.getElementById('app');
+            const loginBtn = document.getElementById('login-btn');
+            const guestLoginBtn = document.getElementById('guest-login-btn');
+            const userProfile = document.getElementById('user-profile');
             const searchInput = document.getElementById('search-input');
             const searchResultsContainer = document.getElementById('search-results');
             const myListContainer = document.getElementById('my-list-container');
@@ -160,23 +198,92 @@
                 { level: 5, count: 500, name: "망령", emoji: "👻" }
             ];
 
-            // --- LOCAL STORAGE FUNCTIONS ---
-            function loadUserList() {
-                const savedList = localStorage.getItem('myAnimeList');
-                if (savedList) {
-                    userList = JSON.parse(savedList);
+            onAuthStateChanged(auth, user => {
+                if (user) {
+                    userId = user.uid;
+                    loginView.classList.add('hidden');
+                    appView.classList.remove('hidden');
+                    userProfile.classList.remove('hidden');
+                    
+                    if (user.isAnonymous) {
+                        userProfile.innerHTML = `
+                            <span class="text-sm md:text-base text-yellow-400 font-semibold">게스트 모드</span>
+                            <button id="logout-btn" class="text-xs bg-gray-600 hover:bg-gray-700 text-white font-semibold py-1 px-3 rounded-md transition">나가기</button>
+                        `;
+                    } else {
+                        userProfile.innerHTML = `
+                            <img id="user-avatar" class="w-8 h-8 md:w-10 md:h-10 rounded-full" src="${user.photoURL}" alt="User Avatar">
+                            <span id="user-name" class="text-sm md:text-base text-white font-semibold hidden sm:inline">${user.displayName}</span>
+                            <button id="logout-btn" class="text-xs bg-gray-600 hover:bg-gray-700 text-white font-semibold py-1 px-3 rounded-md transition">로그아웃</button>
+                        `;
+                    }
+                    document.getElementById('logout-btn').addEventListener('click', logout);
+                    loadUserList();
                 } else {
+                    userId = null;
                     userList = {};
+                    if (unsubscribe) unsubscribe();
+                    renderMyList(); 
+                    updateAchievements();
+                    loginView.classList.remove('hidden');
+                    appView.classList.add('hidden');
+                    userProfile.classList.add('hidden');
                 }
-                renderMyList();
-                updateAchievements();
+            });
+
+            async function signInWithGoogle() {
+                const provider = new GoogleAuthProvider();
+                try {
+                    await signInWithPopup(auth, provider);
+                } catch (error) {
+                    console.error("Google sign-in failed:", error);
+                    if (error.code === 'auth/unauthorized-domain') {
+                        const domain = window.location.hostname;
+                        alert(`로그인 실패(auth/unauthorized-domain): 현재 앱의 주소가 Firebase에 등록되지 않았습니다.\n\nFirebase 콘솔의 [Authentication > Settings > 승인된 도메인] 목록에 현재 브라우저의 도메인을 추가해주세요: ${domain}`);
+                    } else {
+                        alert("로그인에 실패했습니다. 팝업이 차단되었는지 확인해주세요.");
+                    }
+                }
             }
             
-            function saveUserList() {
-                localStorage.setItem('myAnimeList', JSON.stringify(userList));
+            async function signInAsGuest() {
+                try {
+                    await signInAnonymously(auth);
+                } catch (error) {
+                    console.error("Guest sign-in failed:", error);
+                    alert("게스트 로그인에 실패했습니다. 다시 시도해주세요.");
+                }
+            }
+
+            async function logout() {
+                try {
+                    await signOut(auth);
+                } catch (error) {
+                    console.error("Sign-out failed:", error);
+                }
             }
             
-            // --- CORE APP LOGIC ---
+            function loadUserList() {
+                 if (!userId) return;
+                if (unsubscribe) unsubscribe();
+                const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/animeChecklist`, "data");
+                unsubscribe = onSnapshot(userDocRef, (doc) => {
+                    userList = doc.exists() ? doc.data() : {};
+                    renderMyList();
+                    updateAchievements();
+                });
+            }
+            
+            async function saveUserList() {
+                if (!userId) return;
+                try {
+                    const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/animeChecklist`, "data");
+                    await setDoc(userDocRef, userList);
+                } catch (error) {
+                    console.error("Error saving user list: ", error);
+                }
+            }
+            
             function debounce(func, delay) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => func.apply(this, a), delay); }; }
             const debouncedSearch = debounce(handleSearchInput, 300);
             
@@ -209,97 +316,24 @@
             
             const statusColors = { watching: { border: 'border-blue-500', bg: 'bg-blue-900/30', text: 'text-blue-400' }, completed: { border: 'border-green-500', bg: 'bg-green-900/30', text: 'text-green-400' }, planned: { border: 'border-yellow-500', bg: 'bg-yellow-900/30', text: 'text-yellow-400' }, dropped: { border: 'border-red-500', bg: 'bg-red-900/30', text: 'text-red-400' }, default: { border: 'border-gray-600', bg: 'bg-surface', text: 'text-gray-500' } };
             function getFilterName(status) { switch (status) { case 'watching': return '시청 중'; case 'completed': return '완료'; case 'planned': return '시청 예정'; case 'dropped': return '중단'; case 'all': return '전체'; default: return ''; } }
-            
-            function addAnimeToList(animeData) {
-                const animeId = animeData.id;
-                if (!animeId) { console.error("Invalid anime data provided:", animeData); return; }
-                if (userList[animeId]) { alert('이미 리스트에 있습니다.'); return; }
-                userList[animeId] = {
-                    id: animeId,
-                    title: decodeURIComponent(animeData.title),
-                    year: animeData.year,
-                    posterUrl: animeData.posterUrl,
-                    status: 'planned',
-                    score: 0,
-                    addedAt: Date.now()
-                };
-                renderMyList();
-                updateAchievements();
-                saveUserList();
-                searchInput.value = '';
-                searchResultsContainer.classList.add('hidden');
-            }
-
-            function renderMyList() { 
-                if (!myListContainer) return; 
-                const filteredList = Object.entries(userList).filter(([id, data]) => currentFilter === 'all' || data.status === currentFilter).sort(([, a], [, b]) => b.addedAt - a.addedAt); 
-                if (filteredList.length === 0) { 
-                    myListContainer.innerHTML = `<div class="text-center py-10 text-gray-500"><p>${currentFilter === 'all' ? '리스트가 비어있습니다.' : `'${getFilterName(currentFilter)}' 상태의 애니가 없습니다.`}</p><p class="text-sm mt-2">검색창에서 추가해보세요!</p></div>`; 
-                    return; 
-                } 
-                myListContainer.innerHTML = filteredList.map(([id, data]) => { 
-                    const colors = statusColors[data.status] || statusColors.default; 
-                    return `<div id="item-${id}" class="p-3 rounded-lg flex items-center space-x-4 shadow-md border-l-4 cursor-pointer anime-item ${colors.border} ${colors.bg}" data-anime-id="${id}"><img src="${data.posterUrl}" onerror="this.src='https://placehold.co/45x68/374151/9ca3af?text=N/A'" alt="${data.title}" class="w-10 h-15 object-cover rounded-sm flex-shrink-0"><div class="flex-grow min-w-0"><p class="font-bold text-white truncate">${data.title}</p><p class="text-sm text-gray-400">${data.year}</p></div><div class="text-right flex-shrink-0"><p class="font-semibold text-lg ${data.score > 0 ? 'text-primary' : 'text-gray-500'}">${data.score > 0 ? data.score : 'N/A'}</p><p class="text-xs font-semibold ${colors.text}">${getFilterName(data.status)}</p></div></div>`; 
-                }).join(''); 
-            }
-            
+            function addAnimeToList(animeData) { const animeId = animeData.id; if (!animeId) { console.error("Invalid anime data provided:", animeData); return; } if (userList[animeId]) { alert('이미 리스트에 있습니다.'); return; } userList[animeId] = { id: animeId, title: decodeURIComponent(animeData.title), year: animeData.year, posterUrl: animeData.posterUrl, status: 'planned', score: 0, addedAt: Date.now() }; renderMyList(); updateAchievements(); saveUserList(); searchInput.value = ''; searchResultsContainer.classList.add('hidden'); }
+            function renderMyList() { if (!myListContainer) return; const filteredList = Object.entries(userList).filter(([id, data]) => currentFilter === 'all' || data.status === currentFilter).sort(([, a], [, b]) => b.addedAt - a.addedAt); if (filteredList.length === 0) { myListContainer.innerHTML = `<div class="text-center py-10 text-gray-500"><p>${currentFilter === 'all' ? '리스트가 비어있습니다.' : `'${getFilterName(currentFilter)}' 상태의 애니가 없습니다.`}</p><p class="text-sm mt-2">검색창에서 추가해보세요!</p></div>`; return; } myListContainer.innerHTML = filteredList.map(([id, data]) => { const colors = statusColors[data.status] || statusColors.default; return `<div id="item-${id}" class="p-3 rounded-lg flex items-center space-x-4 shadow-md border-l-4 cursor-pointer anime-item ${colors.border} ${colors.bg}" data-anime-id="${id}"><img src="${data.posterUrl}" onerror="this.src='https://placehold.co/45x68/374151/9ca3af?text=N/A'" alt="${data.title}" class="w-10 h-15 object-cover rounded-sm flex-shrink-0"><div class="flex-grow min-w-0"><p class="font-bold text-white truncate">${data.title}</p><p class="text-sm text-gray-400">${data.year}</p></div><div class="text-right flex-shrink-0"><p class="font-semibold text-lg ${data.score > 0 ? 'text-primary' : 'text-gray-500'}">${data.score > 0 ? data.score : 'N/A'}</p><p class="text-xs font-semibold ${colors.text}">${getFilterName(data.status)}</p></div></div>`; }).join(''); }
             function updateAchievements() { const achievementDetails = document.getElementById('achievement-details'); if (!achievementDetails) return; const completedCount = Object.values(userList).filter(item => item.status === 'completed').length; let currentAchievement = null; for (let i = achievements.length - 1; i >= 0; i--) { if (completedCount >= achievements[i].count) { currentAchievement = achievements[i]; break; } } const nextGoal = achievements.find(ach => completedCount < ach.count); const displayAchievement = currentAchievement || achievements[0]; let progressText; let progressTarget; if (nextGoal) { progressText = `다음: ${nextGoal.name} (${completedCount}/${nextGoal.count})`; progressTarget = nextGoal.count; } else { progressText = '최고 등급 달성!'; progressTarget = currentAchievement ? currentAchievement.count : 0; } const progressWidth = (progressTarget > 0) ? Math.min(100, (completedCount / progressTarget) * 100) : 0; achievementDetails.innerHTML = `<div class="flex items-center"><div class="text-3xl mr-4">${displayAchievement.emoji}</div><div class="flex-grow"><div class="flex justify-between items-baseline"><p class="font-bold text-white">${displayAchievement.name}</p><p class="text-sm text-gray-400">${progressText}</p></div><div class="w-full bg-gray-700 rounded-full h-2 mt-1"><div class="progress-bar bg-primary h-2 rounded-full" style="width: ${progressWidth}%"></div></div></div></div>`; }
-            
-            async function openInfoModal(animeId) { 
-                currentEditingId = animeId; 
-                const anime = userList[animeId]; 
-                if (!anime) return; 
-                const infoContentWrapper = document.getElementById('info-content-wrapper'); 
-                const infoLoader = document.getElementById('info-loader'); 
-                infoLoader.classList.remove('hidden'); 
-                infoContentWrapper.classList.add('hidden'); 
-                infoModal.classList.remove('hidden'); 
-                modalStatus.innerHTML = `<option value="watching">시청 중</option><option value="completed">완료</option><option value="planned">시청 예정</option><option value="dropped">중단</option>`; 
-                modalScore.innerHTML = `<option value="0">미선택</option>${[10,9,8,7,6,5,4,3,2,1].map(s => `<option value="${s}">${s}</option>`).join('')}`; 
-                modalStatus.value = anime.status; 
-                modalScore.value = anime.score; 
-                try { 
-                    const url = `https://api.themoviedb.org/3/tv/${animeId}?api_key=${TMDB_API_KEY}&language=ko-KR`; 
-                    const response = await fetch(url); 
-                    if (!response.ok) throw new Error('Failed to fetch details'); 
-                    const data = await response.json(); 
-                    document.getElementById('info-title').textContent = data.name; 
-                    const posterPath = data.poster_path ? `https://image.tmdb.org/t/p/w300${data.poster_path}` : 'https://placehold.co/300x450/374151/9ca3af?text=N/A'; 
-                    document.getElementById('info-poster').src = posterPath; 
-                    const overview = data.overview || '줄거리 정보가 없습니다.'; 
-                    overviewEl.textContent = overview; 
-                    setTimeout(() => { 
-                        overviewEl.classList.add('overview-truncated'); 
-                        if (overviewEl.scrollHeight > overviewEl.clientHeight) { 
-                            overviewToggleBtn.classList.remove('hidden'); 
-                            overviewToggleBtn.textContent = '더보기...'; 
-                        } else { 
-                            overviewToggleBtn.classList.add('hidden'); 
-                        } 
-                    }, 100); 
-                    infoLoader.classList.add('hidden'); 
-                    infoContentWrapper.classList.remove('hidden'); 
-                } catch (error) { 
-                    console.error("Failed to fetch details:", error); 
-                    document.getElementById('info-modal-content').innerHTML = `<p class="text-red-400 text-center">정보 불러오기 실패.</p>`; 
-                } 
-            }
-            
+            async function openInfoModal(animeId) { currentEditingId = animeId; const anime = userList[animeId]; if (!anime) return; const infoContentWrapper = document.getElementById('info-content-wrapper'); const infoLoader = document.getElementById('info-loader'); infoLoader.classList.remove('hidden'); infoContentWrapper.classList.add('hidden'); infoModal.classList.remove('hidden'); modalStatus.innerHTML = `<option value="watching">시청 중</option><option value="completed">완료</option><option value="planned">시청 예정</option><option value="dropped">중단</option>`; modalScore.innerHTML = `<option value="0">미선택</option>${[10,9,8,7,6,5,4,3,2,1].map(s => `<option value="${s}">${s}</option>`).join('')}`; modalStatus.value = anime.status; modalScore.value = anime.score; try { const url = `https://api.themoviedb.org/3/tv/${animeId}?api_key=${TMDB_API_KEY}&language=ko-KR`; const response = await fetch(url); if (!response.ok) throw new Error('Failed to fetch details'); const data = await response.json(); document.getElementById('info-title').textContent = data.name; const posterPath = data.poster_path ? `https://image.tmdb.org/t/p/w300${data.poster_path}` : 'https://placehold.co/300x450/374151/9ca3af?text=N/A'; document.getElementById('info-poster').src = posterPath; const overview = data.overview || '줄거리 정보가 없습니다.'; overviewEl.textContent = overview; setTimeout(() => { overviewEl.classList.add('overview-truncated'); if (overviewEl.scrollHeight > overviewEl.clientHeight) { overviewToggleBtn.classList.remove('hidden'); overviewToggleBtn.textContent = '더보기...'; } else { overviewToggleBtn.classList.add('hidden'); } }, 100); infoLoader.classList.add('hidden'); infoContentWrapper.classList.remove('hidden'); } catch (error) { console.error("Failed to fetch details:", error); document.getElementById('info-modal-content').innerHTML = `<p class="text-red-400 text-center">정보 불러오기 실패.</p>`; } }
             function closeInfoModal() { infoModal.classList.add('hidden'); }
-            function saveChanges() { if (!currentEditingId || !userList[currentEditingId]) return; const button = document.getElementById('modal-save'); button.disabled = true; button.textContent = '저장 중...'; userList[currentEditingId].status = modalStatus.value; userList[currentEditingId].score = parseInt(modalScore.value, 10); renderMyList(); updateAchievements(); closeInfoModal(); saveUserList(); button.disabled = false; button.textContent = '저장'; }
+            function saveChanges() { if (!currentEditingId || !userList[currentEditingId]) return; const button = document.getElementById('modal-save'); button.disabled = true; button.textContent = '저장 중...'; userList[currentEditingId].status = modalStatus.value; userList[currentEditingId].score = parseInt(modalScore.value, 10); renderMyList(); updateAchievements(); closeInfoModal(); saveUserList().finally(() => { button.disabled = false; button.textContent = '저장'; }); }
             function deleteItem() { if (!currentEditingId || !userList[currentEditingId]) return; delete userList[currentEditingId]; renderMyList(); updateAchievements(); closeInfoModal(); saveUserList(); }
             
             searchInput.addEventListener('input', debouncedSearch);
             searchResultsContainer.addEventListener('click', e => { 
                 const item = e.target.closest('[data-anime-id]'); 
                 if (item) {
-                     const animeData = {
+                     addAnimeToList({
                          id: item.getAttribute('data-anime-id'),
-                         title: decodeURIComponent(item.getAttribute('data-anime-title')),
+                         title: item.getAttribute('data-anime-title'),
                          year: item.getAttribute('data-anime-year'),
                          posterUrl: item.getAttribute('data-poster-url')
-                     };
-                     addAnimeToList(animeData);
+                     });
                 }
             });
             myListContainer.addEventListener('click', e => { 
@@ -313,9 +347,6 @@
             document.getElementById('modal-cancel').addEventListener('click', closeInfoModal);
             document.getElementById('modal-delete').addEventListener('click', deleteItem);
             tabs.forEach(tab => { tab.addEventListener('click', e => { tabs.forEach(t => t.classList.replace('text-white', 'text-gray-400') || t.classList.replace('border-primary', 'border-transparent')); e.target.classList.replace('text-gray-400', 'text-white'); e.target.classList.replace('border-transparent', 'border-primary'); currentFilter = e.target.dataset.status; renderMyList(); }); });
-
-            // Initial Load
-            loadUserList();
         });
     </script>
 </body>
