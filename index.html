@@ -239,7 +239,7 @@
                     console.error("Google sign-in failed:", error);
                     if (error.code === 'auth/unauthorized-domain') {
                         const domain = window.location.hostname;
-                        alert(`로그인 실패(auth/unauthorized-domain): 현재 앱의 주소가 Firebase에 등록되지 않았습니다.\n\nFirebase 콘솔의 [Authentication > Settings > 승인된 도메인] 목록에 현재 브라우저의 도메인을 추가해주세요: ${domain}`);
+                        alert(`로그인 실패(auth/unauthorized-domain): 현재 앱의 주소가 Firebase에 등록되지 않았습니다.\n\n[해결 방법]\n1. Firebase 콘솔로 이동하세요.\n2. [Authentication] > [Settings] 탭으로 가세요.\n3. '승인된 도메인' 섹션에서 [도메인 추가]를 누르세요.\n4. 다음 도메인을 정확히 추가하세요: ${domain}`);
                     } else {
                         alert("로그인에 실패했습니다. 팝업이 차단되었는지 확인해주세요.");
                     }
@@ -324,6 +324,8 @@
             function saveChanges() { if (!currentEditingId || !userList[currentEditingId]) return; const button = document.getElementById('modal-save'); button.disabled = true; button.textContent = '저장 중...'; userList[currentEditingId].status = modalStatus.value; userList[currentEditingId].score = parseInt(modalScore.value, 10); renderMyList(); updateAchievements(); closeInfoModal(); saveUserList().finally(() => { button.disabled = false; button.textContent = '저장'; }); }
             function deleteItem() { if (!currentEditingId || !userList[currentEditingId]) return; delete userList[currentEditingId]; renderMyList(); updateAchievements(); closeInfoModal(); saveUserList(); }
             
+            loginBtn.addEventListener('click', signInWithGoogle);
+            guestLoginBtn.addEventListener('click', signInAsGuest);
             searchInput.addEventListener('input', debouncedSearch);
             searchResultsContainer.addEventListener('click', e => { 
                 const item = e.target.closest('[data-anime-id]'); 
