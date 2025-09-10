@@ -34,11 +34,11 @@
             box-shadow: 0 0 0 30px var(--surface) inset !important;
         }
         
-        #search-input {
+        #search-input, .auth-input {
             background-color: var(--surface) !important;
             color: var(--on-surface) !important;
         }
-        #search-input::placeholder {
+        #search-input::placeholder, .auth-input::placeholder {
             color: var(--on-surface-secondary);
         }
 
@@ -57,21 +57,43 @@
 </head>
 <body class="antialiased">
 
-    <!-- Login View -->
-    <div id="login-view" class="fixed inset-0 flex items-center justify-center hidden p-4">
+    <!-- Auth View -->
+    <div id="auth-view" class="fixed inset-0 flex items-center justify-center hidden p-4">
         <div class="w-full max-w-sm text-center">
             <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">My Anime Checklist 📝</h1>
             <p class="text-gray-400 mb-8">당신의 애니 여정을 기록하고 성장시키세요.</p>
+            
+            <!-- Login Form -->
+            <form id="login-form" class="space-y-4">
+                <input id="login-email" type="email" placeholder="이메일" class="auth-input w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required>
+                <input id="login-password" type="password" placeholder="비밀번호" class="auth-input w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required>
+                <button type="submit" class="w-full bg-primary text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition">로그인</button>
+                <p class="text-center text-sm text-red-400 hidden" id="login-error"></p>
+                <p class="text-center text-sm text-gray-400">계정이 없으신가요? <a href="#" id="show-signup" class="font-semibold text-primary hover:underline">회원가입</a></p>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signup-form" class="space-y-4 hidden">
+                <input id="signup-email" type="email" placeholder="이메일" class="auth-input w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required>
+                <input id="signup-password" type="password" placeholder="비밀번호 (6자 이상)" class="auth-input w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required>
+                <input id="signup-password-confirm" type="password" placeholder="비밀번호 확인" class="auth-input w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required>
+                <button type="submit" class="w-full bg-primary text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition">회원가입</button>
+                <p class="text-center text-sm text-red-400 hidden" id="signup-error"></p>
+                <p class="text-center text-sm text-gray-400">이미 계정이 있으신가요? <a href="#" id="show-login" class="font-semibold text-primary hover:underline">로그인</a></p>
+            </form>
+
+            <div class="relative flex py-5 items-center">
+                <div class="flex-grow border-t border-gray-600"></div>
+                <span class="flex-shrink mx-4 text-gray-400 text-sm">또는</span>
+                <div class="flex-grow border-t border-gray-600"></div>
+            </div>
+
             <div class="space-y-4">
-                <button id="login-btn" class="w-full bg-white text-gray-800 font-semibold py-3 px-6 rounded-lg flex items-center justify-center shadow-lg hover:bg-gray-200 transition">
+                <button id="google-login-btn" class="w-full bg-white text-gray-800 font-semibold py-3 px-6 rounded-lg flex items-center justify-center shadow-lg hover:bg-gray-200 transition">
                     <svg class="w-6 h-6 mr-3" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></svg>
-                    Google 계정으로 로그인
+                    Google 계정으로 계속하기
                 </button>
-                <p class="text-xs text-gray-500">모든 기기에서 데이터를 동기화하세요.</p>
-                <button id="guest-login-btn" class="w-full bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:bg-gray-700 transition">
-                    게스트로 계속하기
-                </button>
-                 <p class="text-xs text-gray-500">기록은 현재 사용 중인 기기에만 저장됩니다.</p>
+                <a href="#" id="guest-login-btn" class="text-sm text-gray-400 hover:text-white">게스트로 둘러보기</a>
             </div>
         </div>
     </div>
@@ -82,7 +104,7 @@
         <header class="flex justify-between items-center mb-6">
             <h1 class="text-xl md:text-2xl font-bold text-white">My Anime Checklist 📝</h1>
             <div id="user-profile" class="flex items-center space-x-3 hidden">
-                <!-- Guest / User Info -->
+                <!-- User Info -->
             </div>
         </header>
 
@@ -158,7 +180,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, signInAnonymously, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         
         document.addEventListener('DOMContentLoaded', () => {
             const TMDB_API_KEY = '9a5e26536e343678fc2a6147946e748a'; 
@@ -175,15 +197,32 @@
             let currentEditingId = null;
             let currentFilter = 'all';
 
-            const loginView = document.getElementById('login-view');
+            // --- UI Elements ---
+            const authView = document.getElementById('auth-view');
             const appView = document.getElementById('app');
-            const loginBtn = document.getElementById('login-btn');
+            // Login
+            const loginForm = document.getElementById('login-form');
+            const loginEmail = document.getElementById('login-email');
+            const loginPassword = document.getElementById('login-password');
+            const loginError = document.getElementById('login-error');
+            const showSignupBtn = document.getElementById('show-signup');
+            // Signup
+            const signupForm = document.getElementById('signup-form');
+            const signupEmail = document.getElementById('signup-email');
+            const signupPassword = document.getElementById('signup-password');
+            const signupPasswordConfirm = document.getElementById('signup-password-confirm');
+            const signupError = document.getElementById('signup-error');
+            const showLoginBtn = document.getElementById('show-login');
+            // Social & Guest
+            const googleLoginBtn = document.getElementById('google-login-btn');
             const guestLoginBtn = document.getElementById('guest-login-btn');
+            // App
             const userProfile = document.getElementById('user-profile');
             const searchInput = document.getElementById('search-input');
             const searchResultsContainer = document.getElementById('search-results');
             const myListContainer = document.getElementById('my-list-container');
             const tabs = document.querySelectorAll('.list-tab');
+            // Modal
             const infoModal = document.getElementById('info-modal');
             const modalStatus = document.getElementById('modal-status');
             const modalScore = document.getElementById('modal-score');
@@ -199,36 +238,23 @@
             ];
 
             // --- Authentication ---
-            getRedirectResult(auth).catch((error) => {
-                console.error("Google sign-in redirect result error:", error);
-                if (error.code === 'auth/unauthorized-domain') {
-                    const domain = window.location.hostname;
-                    alert(`로그인 실패(auth/unauthorized-domain): 현재 앱의 주소가 Firebase에 등록되지 않았습니다.\n\n[해결 방법]\n1. Firebase 콘솔로 이동하세요.\n2. [Authentication] > [Settings] 탭으로 가세요.\n3. '승인된 도메인' 섹션에서 [도메인 추가]를 누르세요.\n4. 다음 도메인을 정확히 추가하세요: ${domain}`);
-                } else {
-                    alert("로그인 과정에서 오류가 발생했습니다.");
-                }
-            });
+            getRedirectResult(auth).catch((error) => console.error("Redirect Error:", error));
 
             onAuthStateChanged(auth, user => {
                 if (user) {
                     userId = user.uid;
-                    loginView.classList.add('hidden');
+                    authView.classList.add('hidden');
                     appView.classList.remove('hidden');
                     userProfile.classList.remove('hidden');
                     
                     if (user.isAnonymous) {
-                        userProfile.innerHTML = `
-                            <span class="text-sm md:text-base text-yellow-400 font-semibold">게스트 모드</span>
-                            <button id="logout-btn" class="text-xs bg-gray-600 hover:bg-gray-700 text-white font-semibold py-1 px-3 rounded-md transition">나가기</button>
-                        `;
-                    } else {
-                        userProfile.innerHTML = `
-                            <img id="user-avatar" class="w-8 h-8 md:w-10 md:h-10 rounded-full" src="${user.photoURL}" alt="User Avatar">
-                            <span id="user-name" class="text-sm md:text-base text-white font-semibold hidden sm:inline">${user.displayName}</span>
-                            <button id="logout-btn" class="text-xs bg-gray-600 hover:bg-gray-700 text-white font-semibold py-1 px-3 rounded-md transition">로그아웃</button>
-                        `;
+                        userProfile.innerHTML = `<span class="text-sm md:text-base text-yellow-400 font-semibold">게스트 모드</span><button id="logout-btn" class="text-xs bg-gray-600 hover:bg-gray-700 text-white font-semibold py-1 px-3 rounded-md transition">나가기</button>`;
+                    } else if (user.providerData.some(p => p.providerId === 'google.com')) {
+                        userProfile.innerHTML = `<img class="w-8 h-8 md:w-10 md:h-10 rounded-full" src="${user.photoURL}" alt="User Avatar"><span class="text-sm md:text-base text-white font-semibold hidden sm:inline">${user.displayName}</span><button id="logout-btn" class="text-xs bg-gray-600 hover:bg-gray-700 text-white font-semibold py-1 px-3 rounded-md transition">로그아웃</button>`;
+                    } else { // Email/Password
+                        userProfile.innerHTML = `<span class="text-sm md:text-base text-gray-300 font-medium hidden sm:inline">${user.email}</span><button id="logout-btn" class="text-xs bg-gray-600 hover:bg-gray-700 text-white font-semibold py-1 px-3 rounded-md transition">로그아웃</button>`;
                     }
-                    document.getElementById('logout-btn').addEventListener('click', logout);
+                    document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
                     loadUserList();
                 } else {
                     userId = null;
@@ -236,7 +262,7 @@
                     if (unsubscribe) unsubscribe();
                     renderMyList(); 
                     updateAchievements();
-                    loginView.classList.remove('hidden');
+                    authView.classList.remove('hidden');
                     appView.classList.add('hidden');
                     userProfile.classList.add('hidden');
                 }
@@ -246,120 +272,83 @@
                 const provider = new GoogleAuthProvider();
                 try {
                     await signInWithRedirect(auth, provider);
-                } catch (error) {
-                    console.error("Google sign-in redirect failed to start:", error);
-                     if (error.code === 'auth/unauthorized-domain') {
-                        const domain = window.location.hostname;
-                        alert(`로그인 실패(auth/unauthorized-domain): 현재 앱의 주소가 Firebase에 등록되지 않았습니다.\n\n[해결 방법]\n1. Firebase 콘솔로 이동하세요.\n2. [Authentication] > [Settings] 탭으로 가세요.\n3. '승인된 도메인' 섹션에서 [도메인 추가]를 누르세요.\n4. 다음 도메인을 정확히 추가하세요: ${domain}`);
-                    } else {
-                        alert("로그인 과정 시작에 실패했습니다.");
-                    }
-                }
+                } catch (error) { console.error("Google Sign-in failed:", error); }
             }
             
             async function signInAsGuest() {
                 try {
                     await signInAnonymously(auth);
-                } catch (error) {
-                    console.error("Guest sign-in failed:", error);
-                    alert("게스트 로그인에 실패했습니다. 다시 시도해주세요.");
-                }
+                } catch (error) { console.error("Guest sign-in failed:", error); }
             }
+            
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                loginError.classList.add('hidden');
+                try {
+                    await signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
+                } catch (error) {
+                    loginError.textContent = getAuthErrorMessage(error.code);
+                    loginError.classList.remove('hidden');
+                }
+            });
 
-            async function logout() {
+            signupForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                signupError.classList.add('hidden');
+                if (signupPassword.value !== signupPasswordConfirm.value) {
+                    signupError.textContent = "비밀번호가 일치하지 않습니다.";
+                    signupError.classList.remove('hidden');
+                    return;
+                }
                 try {
-                    await signOut(auth);
+                    await createUserWithEmailAndPassword(auth, signupEmail.value, signupPassword.value);
                 } catch (error) {
-                    console.error("Sign-out failed:", error);
+                    signupError.textContent = getAuthErrorMessage(error.code);
+                    signupError.classList.remove('hidden');
+                }
+            });
+            
+            function getAuthErrorMessage(code) {
+                switch (code) {
+                    case 'auth/invalid-email': return '유효하지 않은 이메일 형식입니다.';
+                    case 'auth/user-not-found':
+                    case 'auth/wrong-password': return '이메일 또는 비밀번호가 일치하지 않습니다.';
+                    case 'auth/email-already-in-use': return '이미 사용 중인 이메일입니다.';
+                    case 'auth/weak-password': return '비밀번호는 6자 이상이어야 합니다.';
+                    default: return '오류가 발생했습니다. 다시 시도해주세요.';
                 }
             }
             
-            function loadUserList() {
-                 if (!userId) return;
-                if (unsubscribe) unsubscribe();
-                const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/animeChecklist`, "data");
-                unsubscribe = onSnapshot(userDocRef, (doc) => {
-                    userList = doc.exists() ? doc.data() : {};
-                    renderMyList();
-                    updateAchievements();
-                });
-            }
-            
-            async function saveUserList() {
-                if (!userId) return;
-                try {
-                    const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/animeChecklist`, "data");
-                    await setDoc(userDocRef, userList);
-                } catch (error) {
-                    console.error("Error saving user list: ", error);
-                }
-            }
-            
+            showSignupBtn.addEventListener('click', (e) => { e.preventDefault(); loginForm.classList.add('hidden'); signupForm.classList.remove('hidden'); });
+            showLoginBtn.addEventListener('click', (e) => { e.preventDefault(); signupForm.classList.add('hidden'); loginForm.classList.remove('hidden'); });
+
+            // --- The rest of the app's logic (Firestore, TMDB, UI rendering) ---
+            function loadUserList() { if (!userId) return; if (unsubscribe) unsubscribe(); const ref = doc(db, `artifacts/${appId}/users/${userId}/animeChecklist`, "data"); unsubscribe = onSnapshot(ref, (d) => { userList = d.exists() ? d.data() : {}; renderMyList(); updateAchievements(); }); }
+            async function saveUserList() { if (!userId) return; const ref = doc(db, `artifacts/${appId}/users/${userId}/animeChecklist`, "data"); await setDoc(ref, userList).catch(e => console.error("Save failed:", e)); }
             function debounce(func, delay) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => func.apply(this, a), delay); }; }
             const debouncedSearch = debounce(handleSearchInput, 300);
-            
-            async function handleSearchInput() {
-                const searchTerm = searchInput.value.trim();
-                if (searchTerm.length < 2) { searchResultsContainer.classList.add('hidden'); return; }
-                searchResultsContainer.innerHTML = `<div class="p-4 text-center text-gray-400">검색 중...</div>`;
-                searchResultsContainer.classList.remove('hidden');
-                try {
-                    const url = `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_API_KEY}&language=ko-KR&query=${encodeURIComponent(searchTerm)}&include_adult=false`;
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error('Network response');
-                    const data = await response.json();
-                    const animeResults = data.results.filter(item => item.origin_country.includes('JP') || (item.genre_ids && item.genre_ids.includes(16)));
-                    renderSearchResults(animeResults);
-                } catch (error) {
-                    console.error("Search failed:", error);
-                    searchResultsContainer.innerHTML = `<div class="p-4 text-center text-red-400">검색 실패</div>`;
-                }
-            }
-
-            function renderSearchResults(results) {
-                if (results.length === 0) { searchResultsContainer.innerHTML = `<div class="p-4 text-center text-gray-400">결과 없음</div>`; return; }
-                searchResultsContainer.innerHTML = results.map(anime => {
-                    const year = anime.first_air_date ? anime.first_air_date.split('-')[0] : 'N/A';
-                    const posterPath = anime.poster_path ? `https://image.tmdb.org/t/p/w92${anime.poster_path}` : 'https://placehold.co/45x68/374151/9ca3af?text=N/A';
-                    return `<div class="flex items-center p-3 hover:bg-gray-700 cursor-pointer" data-anime-id="${anime.id}" data-anime-title="${encodeURIComponent(anime.name)}" data-anime-year="${year}" data-poster-url="${posterPath}"><img src="${posterPath}" alt="${anime.name}" class="w-10 h-15 object-cover rounded-sm mr-4"><div><p class="font-semibold text-white">${anime.name}</p><p class="text-sm text-gray-300">${year}</p></div></div>`;
-                }).join('');
-            }
-            
-            const statusColors = { watching: { border: 'border-blue-500', bg: 'bg-blue-900/30', text: 'text-blue-400' }, completed: { border: 'border-green-500', bg: 'bg-green-900/30', text: 'text-green-400' }, planned: { border: 'border-yellow-500', bg: 'bg-yellow-900/30', text: 'text-yellow-400' }, dropped: { border: 'border-red-500', bg: 'bg-red-900/30', text: 'text-red-400' }, default: { border: 'border-gray-600', bg: 'bg-surface', text: 'text-gray-500' } };
-            function getFilterName(status) { switch (status) { case 'watching': return '시청 중'; case 'completed': return '완료'; case 'planned': return '시청 예정'; case 'dropped': return '중단'; case 'all': return '전체'; default: return ''; } }
-            function addAnimeToList(animeData) { const animeId = animeData.id; if (!animeId) { console.error("Invalid anime data provided:", animeData); return; } if (userList[animeId]) { alert('이미 리스트에 있습니다.'); return; } userList[animeId] = { id: animeId, title: decodeURIComponent(animeData.title), year: animeData.year, posterUrl: animeData.posterUrl, status: 'planned', score: 0, addedAt: Date.now() }; renderMyList(); updateAchievements(); saveUserList(); searchInput.value = ''; searchResultsContainer.classList.add('hidden'); }
-            function renderMyList() { if (!myListContainer) return; const filteredList = Object.entries(userList).filter(([id, data]) => currentFilter === 'all' || data.status === currentFilter).sort(([, a], [, b]) => b.addedAt - a.addedAt); if (filteredList.length === 0) { myListContainer.innerHTML = `<div class="text-center py-10 text-gray-500"><p>${currentFilter === 'all' ? '리스트가 비어있습니다.' : `'${getFilterName(currentFilter)}' 상태의 애니가 없습니다.`}</p><p class="text-sm mt-2">검색창에서 추가해보세요!</p></div>`; return; } myListContainer.innerHTML = filteredList.map(([id, data]) => { const colors = statusColors[data.status] || statusColors.default; return `<div id="item-${id}" class="p-3 rounded-lg flex items-center space-x-4 shadow-md border-l-4 cursor-pointer anime-item ${colors.border} ${colors.bg}" data-anime-id="${id}"><img src="${data.posterUrl}" onerror="this.src='https://placehold.co/45x68/374151/9ca3af?text=N/A'" alt="${data.title}" class="w-10 h-15 object-cover rounded-sm flex-shrink-0"><div class="flex-grow min-w-0"><p class="font-bold text-white truncate">${data.title}</p><p class="text-sm text-gray-400">${data.year}</p></div><div class="text-right flex-shrink-0"><p class="font-semibold text-lg ${data.score > 0 ? 'text-primary' : 'text-gray-500'}">${data.score > 0 ? data.score : 'N/A'}</p><p class="text-xs font-semibold ${colors.text}">${getFilterName(data.status)}</p></div></div>`; }).join(''); }
-            function updateAchievements() { const achievementDetails = document.getElementById('achievement-details'); if (!achievementDetails) return; const completedCount = Object.values(userList).filter(item => item.status === 'completed').length; let currentAchievement = null; for (let i = achievements.length - 1; i >= 0; i--) { if (completedCount >= achievements[i].count) { currentAchievement = achievements[i]; break; } } const nextGoal = achievements.find(ach => completedCount < ach.count); const displayAchievement = currentAchievement || achievements[0]; let progressText; let progressTarget; if (nextGoal) { progressText = `다음: ${nextGoal.name} (${completedCount}/${nextGoal.count})`; progressTarget = nextGoal.count; } else { progressText = '최고 등급 달성!'; progressTarget = currentAchievement ? currentAchievement.count : 0; } const progressWidth = (progressTarget > 0) ? Math.min(100, (completedCount / progressTarget) * 100) : 0; achievementDetails.innerHTML = `<div class="flex items-center"><div class="text-3xl mr-4">${displayAchievement.emoji}</div><div class="flex-grow"><div class="flex justify-between items-baseline"><p class="font-bold text-white">${displayAchievement.name}</p><p class="text-sm text-gray-400">${progressText}</p></div><div class="w-full bg-gray-700 rounded-full h-2 mt-1"><div class="progress-bar bg-primary h-2 rounded-full" style="width: ${progressWidth}%"></div></div></div></div>`; }
-            async function openInfoModal(animeId) { currentEditingId = animeId; const anime = userList[animeId]; if (!anime) return; const infoContentWrapper = document.getElementById('info-content-wrapper'); const infoLoader = document.getElementById('info-loader'); infoLoader.classList.remove('hidden'); infoContentWrapper.classList.add('hidden'); infoModal.classList.remove('hidden'); modalStatus.innerHTML = `<option value="watching">시청 중</option><option value="completed">완료</option><option value="planned">시청 예정</option><option value="dropped">중단</option>`; modalScore.innerHTML = `<option value="0">미선택</option>${[10,9,8,7,6,5,4,3,2,1].map(s => `<option value="${s}">${s}</option>`).join('')}`; modalStatus.value = anime.status; modalScore.value = anime.score; try { const url = `https://api.themoviedb.org/3/tv/${animeId}?api_key=${TMDB_API_KEY}&language=ko-KR`; const response = await fetch(url); if (!response.ok) throw new Error('Failed to fetch details'); const data = await response.json(); document.getElementById('info-title').textContent = data.name; const posterPath = data.poster_path ? `https://image.tmdb.org/t/p/w300${data.poster_path}` : 'https://placehold.co/300x450/374151/9ca3af?text=N/A'; document.getElementById('info-poster').src = posterPath; const overview = data.overview || '줄거리 정보가 없습니다.'; overviewEl.textContent = overview; setTimeout(() => { overviewEl.classList.add('overview-truncated'); if (overviewEl.scrollHeight > overviewEl.clientHeight) { overviewToggleBtn.classList.remove('hidden'); overviewToggleBtn.textContent = '더보기...'; } else { overviewToggleBtn.classList.add('hidden'); } }, 100); infoLoader.classList.add('hidden'); infoContentWrapper.classList.remove('hidden'); } catch (error) { console.error("Failed to fetch details:", error); document.getElementById('info-modal-content').innerHTML = `<p class="text-red-400 text-center">정보 불러오기 실패.</p>`; } }
+            async function handleSearchInput() { const q = searchInput.value.trim(); if (q.length < 2) { searchResultsContainer.classList.add('hidden'); return; } searchResultsContainer.innerHTML = `<div class="p-4 text-gray-400">검색 중...</div>`; searchResultsContainer.classList.remove('hidden'); try { const res = await fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB_API_KEY}&language=ko-KR&query=${encodeURIComponent(q)}`); if (!res.ok) throw new Error(); const data = await res.json(); const results = data.results.filter(i => i.origin_country.includes('JP') || (i.genre_ids && i.genre_ids.includes(16))); renderSearchResults(results); } catch (e) { searchResultsContainer.innerHTML = `<div class="p-4 text-red-400">검색 실패</div>`; } }
+            function renderSearchResults(results) { if (results.length === 0) { searchResultsContainer.innerHTML = `<div class="p-4 text-gray-400">결과 없음</div>`; return; } searchResultsContainer.innerHTML = results.map(a => { const y = a.first_air_date ? a.first_air_date.split('-')[0] : 'N/A'; const p = a.poster_path ? `https://image.tmdb.org/t/p/w92${a.poster_path}` : 'https://placehold.co/45x68/374151/9ca3af?text=N/A'; return `<div class="flex items-center p-3 hover:bg-gray-700 cursor-pointer" data-id="${a.id}" data-title="${encodeURIComponent(a.name)}" data-year="${y}" data-poster="${p}"><img src="${p}" class="w-10 h-15 rounded-sm mr-4"><div><p class="font-semibold text-white">${a.name}</p><p class="text-sm text-gray-300">${y}</p></div></div>`; }).join(''); }
+            const statusColors = { watching: { b: 'border-blue-500', g: 'bg-blue-900/30', t: 'text-blue-400' }, completed: { b: 'border-green-500', g: 'bg-green-900/30', t: 'text-green-400' }, planned: { b: 'border-yellow-500', g: 'bg-yellow-900/30', t: 'text-yellow-400' }, dropped: { b: 'border-red-500', g: 'bg-red-900/30', t: 'text-red-400' }, default: { b: 'border-gray-600', g: 'bg-surface', t: 'text-gray-500' } };
+            function getFilterName(s) { switch (s) { case 'watching': return '시청 중'; case 'completed': return '완료'; case 'planned': return '시청 예정'; case 'dropped': return '중단'; case 'all': return '전체'; default: return ''; } }
+            function addAnimeToList(data) { const id = data.id; if (!id || userList[id]) return; userList[id] = { id, title: decodeURIComponent(data.title), year: data.year, posterUrl: data.poster, status: 'planned', score: 0, addedAt: Date.now() }; renderMyList(); updateAchievements(); saveUserList(); searchInput.value = ''; searchResultsContainer.classList.add('hidden'); }
+            function renderMyList() { const list = Object.entries(userList).filter(([i, d]) => currentFilter === 'all' || d.status === currentFilter).sort(([, a], [, b]) => b.addedAt - a.addedAt); if (list.length === 0) { myListContainer.innerHTML = `<div class="text-center py-10 text-gray-500"><p>${currentFilter === 'all' ? '리스트가 비어있습니다.' : `'${getFilterName(currentFilter)}' 상태의 애니가 없습니다.`}</p></div>`; return; } myListContainer.innerHTML = list.map(([id, d]) => { const c = statusColors[d.status] || statusColors.default; return `<div class="p-3 rounded-lg flex items-center space-x-4 shadow-md border-l-4 cursor-pointer anime-item ${c.b} ${c.g}" data-id="${id}"><img src="${d.posterUrl}" onerror="this.src='https://placehold.co/45x68/374151/9ca3af?text=N/A'" class="w-10 h-15 rounded-sm shrink-0"><div class="flex-grow min-w-0"><p class="font-bold text-white truncate">${d.title}</p><p class="text-sm text-gray-400">${d.year}</p></div><div class="text-right shrink-0"><p class="font-semibold text-lg ${d.score > 0 ? 'text-primary' : 'text-gray-500'}">${d.score > 0 ? d.score : 'N/A'}</p><p class="text-xs font-semibold ${c.t}">${getFilterName(d.status)}</p></div></div>`; }).join(''); }
+            function updateAchievements() { const el = document.getElementById('achievement-details'); if (!el) return; const count = Object.values(userList).filter(i => i.status === 'completed').length; let current = null; for (let i = achievements.length - 1; i >= 0; i--) { if (count >= achievements[i].count) { current = achievements[i]; break; } } const next = achievements.find(a => count < a.count); const display = current || achievements[0]; let text; let target; if (next) { text = `다음: ${next.name} (${count}/${next.count})`; target = next.count; } else { text = '최고 등급 달성!'; target = current ? current.count : 0; } const width = (target > 0) ? Math.min(100, (count / target) * 100) : 0; el.innerHTML = `<div class="flex items-center"><div class="text-3xl mr-4">${display.emoji}</div><div class="flex-grow"><div class="flex justify-between items-baseline"><p class="font-bold text-white">${display.name}</p><p class="text-sm text-gray-400">${text}</p></div><div class="w-full bg-gray-700 rounded-full h-2 mt-1"><div class="progress-bar bg-primary h-2 rounded-full" style="width: ${width}%"></div></div></div></div>`; }
+            async function openInfoModal(id) { currentEditingId = id; const anime = userList[id]; if (!anime) return; infoModal.classList.remove('hidden'); document.getElementById('info-loader').classList.remove('hidden'); document.getElementById('info-content-wrapper').classList.add('hidden'); modalStatus.innerHTML = `<option value="watching">시청 중</option><option value="completed">완료</option><option value="planned">시청 예정</option><option value="dropped">중단</option>`; modalScore.innerHTML = `<option value="0">미선택</option>${[10,9,8,7,6,5,4,3,2,1].map(s=>`<option value="${s}">${s}</option>`).join('')}`; modalStatus.value = anime.status; modalScore.value = anime.score; try { const res = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${TMDB_API_KEY}&language=ko-KR`); if (!res.ok) throw new Error(); const data = await res.json(); document.getElementById('info-title').textContent = data.name; document.getElementById('info-poster').src = data.poster_path ? `https://image.tmdb.org/t/p/w300${data.poster_path}` : 'https://placehold.co/300x450/374151/9ca3af?text=N/A'; overviewEl.textContent = data.overview || '줄거리 정보가 없습니다.'; setTimeout(() => { overviewEl.classList.add('overview-truncated'); overviewToggleBtn.classList.toggle('hidden', overviewEl.scrollHeight <= overviewEl.clientHeight); overviewToggleBtn.textContent = '더보기...'; }, 100); } catch(e) { console.error(e); } finally { document.getElementById('info-loader').classList.add('hidden'); document.getElementById('info-content-wrapper').classList.remove('hidden'); } }
             function closeInfoModal() { infoModal.classList.add('hidden'); }
-            function saveChanges() { if (!currentEditingId || !userList[currentEditingId]) return; const button = document.getElementById('modal-save'); button.disabled = true; button.textContent = '저장 중...'; userList[currentEditingId].status = modalStatus.value; userList[currentEditingId].score = parseInt(modalScore.value, 10); renderMyList(); updateAchievements(); closeInfoModal(); saveUserList().finally(() => { button.disabled = false; button.textContent = '저장'; }); }
-            function deleteItem() { if (!currentEditingId || !userList[currentEditingId]) return; delete userList[currentEditingId]; renderMyList(); updateAchievements(); closeInfoModal(); saveUserList(); }
+            function saveChanges() { if (!currentEditingId) return; userList[currentEditingId].status = modalStatus.value; userList[currentEditingId].score = parseInt(modalScore.value, 10); renderMyList(); updateAchievements(); closeInfoModal(); saveUserList(); }
+            function deleteItem() { if (!currentEditingId) return; delete userList[currentEditingId]; renderMyList(); updateAchievements(); closeInfoModal(); saveUserList(); }
             
-            loginBtn.addEventListener('click', signInWithGoogle);
+            googleLoginBtn.addEventListener('click', signInWithGoogle);
             guestLoginBtn.addEventListener('click', signInAsGuest);
             searchInput.addEventListener('input', debouncedSearch);
-            searchResultsContainer.addEventListener('click', e => { 
-                const item = e.target.closest('[data-anime-id]'); 
-                if (item) {
-                     addAnimeToList({
-                         id: item.getAttribute('data-anime-id'),
-                         title: item.getAttribute('data-anime-title'),
-                         year: item.getAttribute('data-anime-year'),
-                         posterUrl: item.getAttribute('data-poster-url')
-                     });
-                }
-            });
-            myListContainer.addEventListener('click', e => { 
-                const item = e.target.closest('.anime-item'); 
-                if (item) {
-                    openInfoModal(item.getAttribute('data-anime-id'));
-                }
-            });
+            searchResultsContainer.addEventListener('click', e => { const i = e.target.closest('[data-id]'); if (i) addAnimeToList({ id: i.dataset.id, title: i.dataset.title, year: i.dataset.year, poster: i.dataset.poster }); });
+            myListContainer.addEventListener('click', e => { const i = e.target.closest('.anime-item'); if (i) openInfoModal(i.dataset.id); });
             overviewToggleBtn.addEventListener('click', () => { overviewEl.classList.toggle('overview-truncated'); overviewToggleBtn.textContent = overviewEl.classList.contains('overview-truncated') ? '더보기...' : '접기'; });
             document.getElementById('modal-save').addEventListener('click', saveChanges);
             document.getElementById('modal-cancel').addEventListener('click', closeInfoModal);
             document.getElementById('modal-delete').addEventListener('click', deleteItem);
-            tabs.forEach(tab => { tab.addEventListener('click', e => { tabs.forEach(t => t.classList.replace('text-white', 'text-gray-400') || t.classList.replace('border-primary', 'border-transparent')); e.target.classList.replace('text-gray-400', 'text-white'); e.target.classList.replace('border-transparent', 'border-primary'); currentFilter = e.target.dataset.status; renderMyList(); }); });
+            tabs.forEach(t => t.addEventListener('click', e => { tabs.forEach(b => b.classList.replace('text-white', 'text-gray-400') || b.classList.replace('border-primary', 'border-transparent')); e.target.classList.replace('text-gray-400', 'text-white'); e.target.classList.replace('border-transparent', 'border-primary'); currentFilter = e.target.dataset.status; renderMyList(); }));
         });
     </script>
 </body>
